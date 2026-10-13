@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>MEZASTAR Cry Finder · v2</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151e30;--line:#2e3c55;--muted:#a6b3c8;--text:#f5f7fb;--mint:#83f0cb;--gold:#ffd27a;--red:#ff9eae}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(155deg,#1b2a43 0%,#0b1020 48%,#101827 100%);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);line-height:1.45}
+main{max-width:760px;margin:auto;padding:16px 14px calc(28px + env(safe-area-inset-bottom))}
+header{padding:22px 18px 20px;border-radius:23px;border:1px solid #3a4a65;background:linear-gradient(140deg,#263954,#172236);position:relative;overflow:hidden}
+header:after{content:"♪";position:absolute;right:15px;top:-15px;font-size:112px;color:#ffffff0c;font-weight:900}
+.eyebrow{font-size:11px;letter-spacing:.15em;color:var(--mint);font-weight:800}h1{font-size:32px;line-height:1.12;margin:8px 0 10px;position:relative;z-index:1}p{margin:0}.muted{color:var(--muted)}.tiny{font-size:12px;color:var(--muted)}.card{background:#151e30ed;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}h2{font-size:17px;margin:0 0 8px}.sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+button,input,select{font:inherit}button{border:0;border-radius:12px;padding:13px 12px;font-size:15px;font-weight:800;cursor:pointer;width:100%;background:var(--mint);color:#10251f;touch-action:manipulation}button:disabled{opacity:.45;cursor:not-allowed}button.secondary{background:#26364e;color:var(--text);border:1px solid #40516d}button.danger{background:#422733;color:#ffdce3;border:1px solid #75404e}input,select{width:100%;padding:12px;border-radius:11px;background:#0b1322;border:1px solid #40516d;color:var(--text);font-size:16px}label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.status{margin-top:11px;padding:11px 12px;border-radius:10px;background:#0b1322;border:1px solid #28364c;color:var(--muted);font-size:13px;min-height:42px}.status.good{color:var(--mint)}.status.warn{color:var(--gold)}.live{display:flex;align-items:center;gap:12px;margin:14px 0}.orb{width:54px;height:54px;flex:none;border-radius:50%;background:#24364d;display:grid;place-items:center;border:1px solid #435979}.orb.on{background:#153b34;border-color:#3fba96;box-shadow:0 0 0 6px #83f0cb12}.orb span{font-size:23px}.live strong{display:block}.meter{height:8px;background:#29374c;border-radius:9px;overflow:hidden;margin-top:8px}.meter span{display:block;height:100%;width:0;background:var(--mint);transition:width .1s}.candidate{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #2c394e}.candidate:last-child{border-bottom:0}.rank{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:#26364d;color:var(--mint);font-weight:900;flex:none}.candname{font-weight:800;overflow-wrap:anywhere}.score{margin-left:auto;white-space:nowrap;color:var(--muted);font-size:12px}.pill{display:inline-block;border-radius:99px;padding:3px 8px;background:#2a3a50;color:#c9d7e9;font-size:11px}.notice{padding:10px 12px;background:#29261e;border-left:3px solid var(--gold);border-radius:0 9px 9px 0;color:#ead9b3;font-size:13px}.sample{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #2b394e}.sample:last-child{border-bottom:0}.sample button{width:auto;padding:7px 10px;font-size:12px}.foot{text-align:center;color:#8290a5;font-size:11px;margin:18px 0}
+@media(max-width:380px){h1{font-size:28px}.card{padding:14px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<header>
+<div class="eyebrow">MEZASTAR · SOUND RECOGNITION LAB</div>
+<h1>寶可夢叫聲<br>即時辨識器</h1>
+<p class="muted">iPhone 現場收音 · 樣本比對 · 候選排名</p>
+</header>
+<div id="hostingNotice" class="card" style="border-color:#8a6d35;background:#29261e">
+<strong style="color:#ffd27a">Safari 使用提醒</strong>
+<p class="tiny" style="margin-top:6px">若你是從 ChatGPT 點開或下載 HTML 檔，這不等於已部署成網站。iPhone 麥克風通常需要透過 HTTPS 網址使用。請將此檔部署到 HTTPS 靜態網站後，再用 Safari 開啟該網址。</p>
+</div>
+
+<section class="card">
+<h2>① 即時聆聽機台</h2>
+<p class="sub">允許麥克風權限後，把手機放在能清楚聽到叫聲的位置。開始聆聽後，叫聲出現時程式會自動擷取音訊特徵並比對樣本。</p>
+<div class="live"><div id="orb" class="orb"><span>🎙️</span></div><div style="flex:1"><strong id="micTitle">麥克風尚未啟動</strong><div id="micDesc" class="tiny">建議距離機台約 20–50 公分，避免遮住麥克風。</div></div></div>
+<div class="meter"><span id="volume"></span></div>
+<div class="grid" style="margin-top:12px"><button id="start">開始聆聽</button><button id="stop" class="secondary" disabled>停止聆聽</button></div>
+<div id="liveStatus" class="status">尚未啟動。iPhone 請透過 HTTPS 網頁開啟，並允許麥克風權限。</div>
+</section>
+
+<section class="card">
+<h2>② 辨識結果</h2>
+<p class="sub">以下是已建立樣本中的相似度排名，不是模型對所有寶可夢的保證辨識結果。</p>
+<div id="resultEmpty" class="tiny">等待叫聲…開始聆聽後，播放叫聲或進行對戰。</div>
+<div id="results" style="display:none"></div>
+</section>
+
+<section class="card">
+<h2>③ 收集新叫聲樣本</h2>
+<p class="sub">當你知道畫面上的寶可夢名稱時，先選擇名稱，再按下錄製。請在叫聲播放前開始錄音，叫聲結束後停止；同一隻建議收集 3–5 次。</p>
+<label for="pokemonName">寶可夢名稱</label><input id="pokemonName" placeholder="例如：皮卡丘、噴火龍">
+<div class="grid"><button id="recordSample" class="secondary">開始收集樣本</button><button id="stopSample" class="secondary" disabled>停止並儲存</button></div>
+<div id="sampleStatus" class="status">樣本會保存在這台裝置的瀏覽器內。</div>
+</section>
+
+<section class="card">
+<h2>④ 樣本資料庫</h2>
+<div id="dbSummary" class="tiny">尚無樣本。</div>
+<div id="sampleList"></div>
+<div class="grid" style="margin-top:10px"><button id="export" class="secondary">匯出備份</button><button id="import" class="secondary">匯入備份</button></div>
+<button id="clear" class="danger" style="margin-top:9px">清除全部樣本</button>
+<input id="file" type="file" accept=".json,application/json" hidden>
+</section>
+
+<section class="card">
+<h2>目前版本的能力與限制</h2>
+<div class="notice"><strong>重要：</strong>目前版本不是已訓練完成的全圖鑑 AI。它會即時收音並比對你建立的樣本；資料庫沒有的寶可夢，無法可靠地直接猜出正確名稱。相似度分數只供排序，不等於正確機率。</div>
+<p class="tiny" style="margin-top:12px">要做到「盡可能辨識所有 MEZASTAR 寶可夢」，下一步需要合法可用、名稱標記正確的叫聲資料集，或訓練完成的聲音分類模型。機台的背景音樂、語音、音量變化與現場噪音都會影響準確度。</p>
+</section>
+<div class="foot">非官方粉絲原型，與 Pokémon／MEZASTAR 無官方關聯。音訊在本機處理，不會自動上傳。</div>
+</main>
+<script>
+(()=>{
+const $=id=>document.getElementById(id), DB='mezastarCryDB_v2';
+let db=readDB(), audioCtx=null, stream=null, source=null, analyser=null, raf=0, collecting=false, collectStart=0, frames=[], lastTrigger=0, smoothed=0, recTimer=null;
+function readDB(){try{const x=JSON.parse(localStorage.getItem(DB)||'[]');return Array.isArray(x)?x:[]}catch{return []}}
+function saveDB(){try{localStorage.setItem(DB,JSON.stringify(db));renderDB()}catch(e){status('sampleStatus','本機儲存空間不足，請匯出備份或刪除部分樣本。')}}
+function status(id,msg,cls=''){const el=$(id);el.textContent=msg;el.className='status '+cls}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderDB(){
+ const names={};db.forEach(x=>names[x.name]=(names[x.name]||0)+1);
+ $('dbSummary').textContent=`${db.length} 個樣本 · ${Object.keys(names).length} 種寶可夢名稱`;
+ $('sampleList').innerHTML=Object.entries(names).map(([name,count])=>`<div class="sample"><div><strong>${escapeHTML(name)}</strong><div class="tiny">${count} 個樣本</div></div><button class="danger" data-delete="${escapeHTML(name)}">刪除</button></div>`).join('')||'<div class="tiny" style="padding:12px 0">尚無樣本，請在知道寶可夢名稱時收集。</div>';
+ $('sampleList').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{db=db.filter(x=>x.name!==b.dataset.delete);saveDB()});
+}
+async function startMic(){
+ if(!navigator.mediaDevices?.getUserMedia)throw Error('瀏覽器不支援麥克風，或目前不是 HTTPS 網頁。');
+ try {
+   stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+ } catch (constraintError) {
+   // Some iOS/Safari versions or microphones reject advanced audio constraints.
+   stream=await navigator.mediaDevices.getUserMedia({audio:true});
+ }
+ audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+ if(audioCtx.state==='suspended')await audioCtx.resume();
+ source=audioCtx.createMediaStreamSource(stream);analyser=audioCtx.createAnalyser();analyser.fftSize=2048;analyser.smoothingTimeConstant=.25;source.connect(analyser);
+ $('orb').classList.add('on');$('micTitle').textContent='正在聆聽';$('micDesc').textContent='音量條會隨環境聲音變化。叫聲出現時會嘗試比對。';
+ $('start').disabled=true;$('stop').disabled=false;
+ const data=new Uint8Array(analyser.fftSize);
+ const loop=()=>{
+   if(!analyser)return;
+   analyser.getByteTimeDomainData(data);let sum=0;for(let i=0;i<data.length;i++){let v=(data[i]-128)/128;sum+=v*v}
+   const rms=Math.sqrt(sum/data.length);smoothed=smoothed*.75+rms*.25;
+   $('volume').style.width=Math.min(100,smoothed*350)+'%';
+   const now=performance.now();
+   // Trigger on sound energy; capture short windows while sound is present.
+   if(smoothed>.018 && now-lastTrigger>1100){
+     const vec=getFeatureVector();
+     if(vec&&db.length)showMatches(vec);
+     else if(!db.length)status('liveStatus','已收到聲音，但樣本庫是空的。請先收集已知寶可夢的叫聲。','warn');
+     lastTrigger=now;
+   }
+   if(collecting){
+     const vec=getFeatureVector();if(vec)frames.push(vec);
+     if(now-collectStart>15000){finishCollect()}
+   }
+   raf=requestAnimationFrame(loop);
+ };
+ raf=requestAnimationFrame(loop);
+ status('liveStatus','麥克風已啟動。播放叫聲時會自動分析。','good');
+}
+function getFeatureVector(){
+ if(!analyser)return null;
+ const n=analyser.frequencyBinCount, freq=new Uint8Array(n), wave=new Uint8Array(analyser.fftSize);
+ analyser.getByteFrequencyData(freq);analyser.getByteTimeDomainData(wave);
+ const bins=40, out=[];
+ // Aggregate logarithmically spaced spectral bands.
+ for(let b=0;b<bins;b++){
+   const lo=Math.max(1,Math.floor(Math.pow(n-1,b/bins))), hi=Math.max(lo+1,Math.floor(Math.pow(n-1,(b+1)/bins)));
+   let sum=0,count=0;for(let k=lo;k<Math.min(n,hi);k++){sum+=freq[k];count++}
+   out.push(Math.log1p(count?sum/count:0));
+ }
+ let rms=0,zc=0,last=wave[0]-128;
+ for(let i=0;i<wave.length;i++){const v=wave[i]-128;rms+=v*v;if((v>=0&&last<0)||(v<0&&last>=0))zc++;last=v}
+ out.push(Math.log1p(Math.sqrt(rms/wave.length)),zc/wave.length);
+ const norm=Math.sqrt(out.reduce((s,v)=>s+v*v,0))||1;
+ return out.map(v=>v/norm);
+}
+function dist(a,b){let s=0,n=Math.min(a.length,b.length);for(let i=0;i<n;i++)s+=(a[i]-b[i])**2;return Math.sqrt(s/n)}
+function showMatches(v){
+ const bestByName={};
+ db.forEach(s=>{const d=dist(v,s.vector);if(!bestByName[s.name]||d<bestByName[s.name].d)bestByName[s.name]={name:s.name,d}});
+ const top=Object.values(bestByName).sort((a,b)=>a.d-b.d).slice(0,5);
+ $('resultEmpty').style.display='none';$('results').style.display='block';
+ $('results').innerHTML=top.map((r,i)=>{const score=Math.max(0,Math.min(99,Math.round((1-r.d)*100)));return `<div class="candidate"><div class="rank">${i+1}</div><div style="flex:1"><div class="candname">${escapeHTML(r.name)}</div><div class="meter"><span style="width:${score}%"></span></div></div><div class="score">${score} 指標</div></div>`}).join('')+'<p class="tiny" style="margin-top:10px">分數只表示相對相似程度，並非辨識正確率。</p>';
+ status('liveStatus',`已比對 ${db.length} 個樣本，顯示前 ${top.length} 個候選。`,'good');
+}
+async function stopMic(){
+ cancelAnimationFrame(raf);raf=0;analyser=null;
+ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+ if(audioCtx){try{await audioCtx.close()}catch{}audioCtx=null}
+ source=null;$('orb').classList.remove('on');$('micTitle').textContent='麥克風已停止';$('micDesc').textContent='按「開始聆聽」即可重新啟動。';
+ $('start').disabled=false;$('stop').disabled=true;$('volume').style.width='0%';
+ if(collecting)finishCollect();
+ status('liveStatus','已停止聆聽。');
+}
+function startCollect(){
+ const name=$('pokemonName').value.trim();if(!name){status('sampleStatus','請先輸入寶可夢名稱。','warn');$('pokemonName').focus();return}
+ if(!analyser){status('sampleStatus','請先按「開始聆聽」啟動麥克風。','warn');return}
+ collecting=true;frames=[];collectStart=performance.now();
+ $('recordSample').disabled=true;$('stopSample').disabled=false;
+ status('sampleStatus',`正在收集「${name}」的聲音特徵。請讓機台播放叫聲，完成後按停止。`,'good');
+}
+function finishCollect(){
+ if(!collecting)return;collecting=false;
+ $('recordSample').disabled=false;$('stopSample').disabled=true;
+ if(frames.length<4){status('sampleStatus','收集到的音訊太少，請重新錄製並讓叫聲持續一段時間。','warn');return}
+ const n=frames[0].length, avg=new Array(n).fill(0);
+ frames.forEach(f=>f.forEach((v,i)=>avg[i]+=v/frames.length));
+ const name=$('pokemonName').value.trim();
+ db.push({name,vector:avg,created:new Date().toISOString()});saveDB();
+ status('sampleStatus',`已儲存「${name}」樣本（${frames.length} 個音訊片段）。建議在不同次播放時再收集幾筆。`,'good');
+}
+$('start').onclick=()=>startMic().catch(e=>{
+ const msg = location.protocol==='file:'
+   ? '目前是直接開啟 HTML 檔案。iPhone Safari 麥克風需要 HTTPS 網址；請部署網站後再開啟。'
+   : (e.name==='NotAllowedError' ? '麥克風權限被拒絕。請到 iPhone「設定」→ Safari → 麥克風，允許此網站使用麥克風，再重新載入。'
+   : e.name==='NotFoundError' ? '找不到可用的麥克風。請確認 iPhone 麥克風正常。'
+   : '啟動失敗：'+e.message);
+ status('liveStatus',msg,'warn');
+});
+$('stop').onclick=stopMic;
+$('recordSample').onclick=startCollect;
+$('stopSample').onclick=finishCollect;
+$('export').onclick=()=>{const blob=new Blob([JSON.stringify({version:2,samples:db})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mezastar-cry-db-v2.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('import').onclick=()=>$('file').click();
+$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text()),arr=Array.isArray(j)?j:j.samples;if(!Array.isArray(arr)||arr.some(s=>typeof s.name!=='string'||!Array.isArray(s.vector)))throw Error('檔案格式不正確');db=arr;saveDB();status('sampleStatus','匯入完成。','good')}catch(err){status('sampleStatus','匯入失敗：'+err.message,'warn')}e.target.value=''};
+$('clear').onclick=()=>{if(confirm('確定刪除全部樣本？建議先匯出備份。')){db=[];saveDB();$('results').style.display='none';$('resultEmpty').style.display='block';status('sampleStatus','樣本庫已清除。')}};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&stream)stopMic()});
+renderDB();
+})();
+</script></body></html>
